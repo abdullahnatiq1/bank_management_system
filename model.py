@@ -1,7 +1,9 @@
 from sqlmodel import SQLModel, Field, Column, Integer, Relationship, BigInteger
 from typing import Optional, List
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
+from enum import Enum
+import sqlalchemy as sa
 
 
 class User(SQLModel, table = True):
@@ -56,3 +58,25 @@ class CreateaccountRequest(SQLModel):
     createdAt : datetime
     userUUID : str
     accountTitle : str
+
+class TransactionManagement(SQLModel):
+    senderAccount : int
+    receiverAccount : int
+    amount : float
+
+
+class TransactionType(str , Enum):
+    DEPOSIT : "DEPOSIT"
+    WITHDRAW : "WITHDRAW"
+    TRANSFER : "TRANSFER"
+
+
+class TransactionLimit(SQLModel, table = True):
+    __tablename__ = "transactions"
+    id : Optional[int] = Field(default = None, primary_key = True)
+    accountNo : int
+    receiverAccount : Optional[int] = None   # only used if transfer is called
+    amount : float
+    type : TransactionType = Field(sa_column = sa.Column(sa.Enum(TransactionType, name = "transaction_type_enum")))
+    timestamp : datetime = Field(default_factory = lambda : datetime.now(timezone.utc))
+
