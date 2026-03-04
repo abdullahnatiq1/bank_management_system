@@ -50,13 +50,11 @@ class Account(SQLModel, table = True):
     
 class CreateaccountRequest(SQLModel):
     id : int
-    AccountUUID : str
     accountNo : int
     accountType : str
     balance : float
     status : bool 
     createdAt : datetime
-    userUUID : str
     accountTitle : str
 
 class TransactionManagement(SQLModel):
@@ -66,9 +64,9 @@ class TransactionManagement(SQLModel):
 
 
 class TransactionType(str , Enum):
-    DEPOSIT : "DEPOSIT"
-    WITHDRAW : "WITHDRAW"
-    TRANSFER : "TRANSFER"
+    DEPOSIT = "DEPOSIT"
+    WITHDRAW = "WITHDRAW"
+    TRANSFER = "TRANSFER"
 
 
 class TransactionLimit(SQLModel, table = True):

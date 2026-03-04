@@ -15,7 +15,7 @@ router = APIRouter(prefix="/account", tags=["User Bank Account"])
 def createAccount(accountData : CreateaccountRequest, session : Session = Depends(getSession), currentUser : User = Depends(authMiddleware)):
     print(f"Creating account: {accountData.accountTitle}")
     
-    generatedNo = random.randint(1000000000, 9999999999)
+    generatedNo = random.randint(1000, 9999)
     
     newAccount = Account(accountTitle  = accountData.accountTitle, accountType = accountData.accountType,balance = accountData.balance, accountNo = generatedNo, userUUID = currentUser.uuid,)
 
@@ -53,8 +53,11 @@ def transactions(data : TransactionManagement, session : Session = Depends(getSe
     sender.balance -= data.amount
     receiver.balance += data.amount
 
+    newHistory = TransactionLimit(accountNo = data.senderAccount, receiverAccount = data.receiverAccount, amount = data.amount, type = TransactionType.TRANSFER)
+
     session.add(sender)
     session.add(receiver)
+    session.add(newHistory)
     session.commit()
 
     session.refresh(sender)
