@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from db import createDBandTables
 from auth import router as auth_router
 from fastapi.openapi.utils import get_openapi
+from routes.accounts import router as accounts_router
 
 app = FastAPI()
 
@@ -14,6 +15,7 @@ def onStartup():
     createDBandTables()
 
 app.include_router(auth_router)
+app.include_router(accounts_router)
 
 def customOpenAPI():
     if app.openapi_schema:

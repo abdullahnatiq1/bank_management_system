@@ -3,8 +3,7 @@ from dotenv import load_dotenv
 from sqlmodel import create_engine, Session, SQLModel
 from model import User
 
-
-load_dotenv()
+load_dotenv() 
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
