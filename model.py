@@ -78,3 +78,7 @@ class TransactionLimit(SQLModel, table = True):
     type : TransactionType = Field(sa_column = sa.Column(sa.Enum(TransactionType, name = "transaction_type_enum")))
     timestamp : datetime = Field(default_factory = lambda : datetime.now(timezone.utc))
 
+
+class DepositWithdrawRequest(SQLModel):
+    accountNo : int
+    amount : float

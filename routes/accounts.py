@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
-from model import User, Account, CreateaccountRequest, TransactionManagement, TransactionType, TransactionLimit
+from model import User, Account, CreateaccountRequest, TransactionManagement, TransactionType, TransactionLimit, DepositWithdrawRequest
 from db import getSession
 from middleware import authMiddleware
 from sqlmodel import Session, select
 from middleware import authMiddleware
 import random
 from datetime import datetime, timezone, time
-from sqlalchemy import func
+from sqlalchemy import func, or_, desc
 
 
 router = APIRouter(prefix="/account", tags=["User Bank Account"])
@@ -65,3 +65,57 @@ def transactions(data : TransactionManagement, session : Session = Depends(getSe
     return{"message" : "Transaction successful",
            "sender balance" : sender.balance
            }
+
+@router.post("/deposit")
+def depositAmount(deposit : DepositWithdrawRequest, session : Session = Depends(getSession), currentUser : User = Depends(authMiddleware)):
+    account = session.exec(select(Account).where(Account.accountNo == deposit.accountNo)).first()
+
+    if not account:
+        raise HTTPException(status_code = 400, detail = "Account not found")
+    
+    account.balance += deposit.amount
+
+    session.add(account)   # ye database ko ye batata hai k jo bi changes hui h usko add krdo 
+    session.commit()       # ye un changes ko commit kr deta hai
+    session.refresh(account)
+
+    return {
+        "message" : "Deposit successful",
+        "current balance" : account.balance
+    }
+
+@router.post("/withdraw")
+def withdrawAmount(withdraw : DepositWithdrawRequest, session : Session = Depends(getSession), currentUser : User = Depends(authMiddleware)):
+    account = session.exec(select(Account).where(Account.accountNo == withdraw.accountNo)).first()
+    
+    if not account:
+        raise HTTPException(status_code = 400, detail = "Account not found")
+    
+    account.balance -= withdraw.amount
+
+    session.add(account)
+    session.commit()
+    session.refresh(account)
+
+    return {
+        "message" : "Withdraw successful",
+        "remaining balance" : account.balance
+    }
+
+@router.get("/history")
+def getHistory(session : Session = Depends(getSession), currentUser : User = Depends(authMiddleware)):
+    account = session.exec(select(Account).where(Account.userUUID == currentUser.uuid)).first()
+
+    if not account:
+        raise HTTPException(status_code = 404, detail = "Account not found")
+    
+    statement = select(TransactionLimit).where(TransactionLimit.accountNo == account.accountNo).order_by(TransactionLimit.timestamp)
+    history = session.exec(statement).all()
+
+    return{
+        "username" : currentUser.username,
+        "account" : account.accountNo,
+        "balance" : account.balance,
+        "history" : history
+    } 
+
